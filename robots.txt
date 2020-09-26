@@ -1,0 +1,13 @@
+User-agent: *
+Disallow: /all
+Disallow: /old
+Disallow: /test-post
+Disallow: *?utm_date=
+Disallow: *type=contex
+Disallow: *?network=g
+Disallow: /anketa-guide.php
+Disallow: /true-altai.php
+Disallow: /special-offers/walk.php
+
+Host: http://tury-na-altai.su
+Sitemap: http://tury-na-altai.su/sitemap.xml

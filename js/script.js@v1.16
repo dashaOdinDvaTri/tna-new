@@ -1,0 +1,2241 @@
+﻿document.addEventListener("DOMContentLoaded", function () {
+  /*-----------------------------ymaps-----------------------------*/
+  if (window.innerWidth > 992) {
+    var script = document.createElement("script")
+    script.setAttribute(
+      "src",
+      "https://api-maps.yandex.ru/2.0-stable/?load=package.standard&lang=ru-RU"
+    )
+    document.body.appendChild(script)
+  }
+
+  /*-----------------------------input-----------------------------*/
+  function input_blur() {
+    ;[].forEach.call(document.querySelectorAll("input,textarea"), function (
+      input
+    ) {
+      input.addEventListener("blur", input_blur_func)
+    })
+  }
+  input_blur()
+  function input_blur_func(e) {
+    e.preventDefault()
+    if (e.target.nextElementSibling) {
+      this.value != ""
+        ? e.target.nextElementSibling.classList.add("active-input")
+        : e.target.nextElementSibling.classList.remove("active-input")
+    }
+  }
+
+  /*-----------------------------mask-----------------------------*/
+  function form_mask() {
+    window.innerWidth > 1200
+      ? [].forEach.call(
+          document.querySelectorAll("input[name=phone]"),
+          function (mask) {
+            mask.addEventListener("input", function () {
+              validation_phone(mask)
+            })
+          }
+        )
+      : [].forEach.call(
+          document.querySelectorAll("input[name=phone]"),
+          function (mask) {
+            mask.addEventListener("keyup", function () {
+              validation_phone(mask)
+            })
+          }
+        )
+    function validation_phone(mask) {
+      mask.value = mask.value.replace(/[^-+()0-9]/gim, "")
+    }
+  }
+  form_mask()
+
+  /*-----------------------------form-----------------------------*/
+  function form_sender() {
+    ;[].forEach.call(
+      document.body.querySelectorAll('form[action="sender.php"]'),
+      function (forms) {
+        forms.addEventListener("submit", submit)
+      }
+    )
+  }
+  form_sender()
+
+  function submit(e) {
+    e.preventDefault()
+
+    var form_this = e.currentTarget,
+      error = (focus_input = false)
+
+    /*error input*/
+    ;[].forEach.call(
+      form_this.querySelectorAll("input,textarea,select"),
+      function (input) {
+        var form_group = closest(input, "form__group")
+          ? closest(input, "form__group").querySelector(".form__group-error")
+          : ""
+        if (
+          (input.selectedIndex == 0 &&
+            !closest(input, "form-tourist__block-date")) ||
+          (closest(input, "form-tourist__block-date_active") &&
+            input.selectedIndex == 0) ||
+          (input.value.trim() == "" &&
+            closest(input, "form__group") &&
+            !input.classList.contains("no-required") &&
+            form_group)
+        ) {
+          closest(input, "form__group").classList.add("is-error")
+          if (!focus_input) {
+            input.focus()
+            focus_input = true
+          }
+          if (form_group)
+            form_group.style.height = form_group.scrollHeight + "px"
+          error = true
+        } else if (closest(input, "form__group")) {
+          closest(input, "form__group").classList.remove("is-error")
+          if (form_group) form_group.style.height = 0
+        }
+
+        if (input.getAttribute("name") == "confirmation") {
+          var check_text = closest(input, "input-check").querySelector(
+            ".input-check__text"
+          )
+          if (input.checked != true) {
+            check_text.classList.add("input-check_error")
+            error = true
+          } else {
+            check_text.classList.remove("input-check_error")
+          }
+        }
+      }
+    )
+
+    if (error) return false
+
+    //ya.city
+    var yacity
+    if (window.innerWidth > 992 && typeof window.ymaps !== "undefined") {
+      window.ymaps.ready(function () {
+        yacity = window.ymaps.geolocation.city
+      })
+    }
+
+    if (form_this.querySelector("input[name=name]"))
+      var name = form_this.querySelector("input[name=name]").value
+    if (form_this.querySelector("input[name=phone]"))
+      var phone = form_this.querySelector("input[name=phone]").value
+    if (form_this.querySelector("input[name=email]"))
+      var email = form_this.querySelector("input[name=email]").value
+    if (form_this.querySelector("textarea[name=message]"))
+      var message = form_this.querySelector("textarea[name=message]").value
+
+    if (form_this.querySelector("input[name=call]"))
+      var call = form_this.querySelector("input[name=call]").value
+
+    //anketa-guide
+    if (form_this.querySelector("input[name=birthday]"))
+      var birthday = form_this.querySelector("input[name=birthday]").value
+    if (form_this.querySelector("input[name=registration_address]"))
+      var registration_address = form_this.querySelector(
+        "input[name=registration_address]"
+      ).value
+    if (form_this.querySelector("textarea[name=field_experience]"))
+      var field_experience = form_this.querySelector(
+        "textarea[name=field_experience]"
+      ).value
+    if (form_this.querySelector("textarea[name=fitness_level]"))
+      var fitness_level = form_this.querySelector(
+        "textarea[name=fitness_level]"
+      ).value
+    if (form_this.querySelector("textarea[name=experience_tourism]"))
+      var experience_tourism = form_this.querySelector(
+        "textarea[name=experience_tourism]"
+      ).value
+
+    //tour-individual
+    if (form_this.querySelector("input[name=duration_days]"))
+      var duration_days = form_this.querySelector("input[name=duration_days]")
+        .value
+    if (form_this.querySelector("input[name=budget]"))
+      var budget =
+        form_this
+          .querySelector("input[name=budget]")
+          .value.toString()
+          .replace(/(\d{1,3})(?=((\d{3})*([^\d]|$)))/g, " $1") + " ₽"
+    if (form_this.querySelector("input[name=skype]"))
+      var skype = form_this.querySelector("input[name=skype]").value
+    if (form_this.querySelector("input[name=desired_month]"))
+      var desired_month = form_this.querySelector("input[name=desired_month]")
+        .value
+    if (form_this.querySelector("input[name=number_days]"))
+      var number_days = form_this.querySelector("input[name=number_days]").value
+    if (form_this.querySelector("input[name=number_persons]"))
+      var number_persons = form_this.querySelector("input[name=number_persons]")
+        .value
+    if (form_this.querySelector("input[name=gender]"))
+      var gender = form_this.querySelector("input[name=gender]").value
+    if (form_this.querySelector("input[name=age]"))
+      var age = form_this.querySelector("input[name=age]").value
+    if (form_this.querySelector("input[name=children]"))
+      var children = form_this.querySelector("input[name=children]").value
+    if (form_this.querySelector("input[name=experience_active_tours]"))
+      var experience_active_tours = form_this.querySelector(
+        "input[name=experience_active_tours]"
+      ).value
+    if (form_this.querySelector("input[name=date_arrival]"))
+      var date_arrival = form_this.querySelector("input[name=date_arrival]")
+        .value
+    if (form_this.querySelector("input[name=arrival_city]"))
+      var arrival_city = form_this.querySelector("input[name=arrival_city]")
+        .value
+    if (form_this.querySelector("input[name=arrival_time]"))
+      var arrival_time = form_this.querySelector("input[name=arrival_time]")
+        .value
+    if (form_this.querySelector("input[name=date_disposal]"))
+      var date_disposal = form_this.querySelector("input[name=date_disposal]")
+        .value
+    if (form_this.querySelector("input[name=time_disposal]"))
+      var time_disposal = form_this.querySelector("input[name=time_disposal]")
+        .value
+    if (form_this.querySelector("input[name=food]:checked"))
+      var food = form_this.querySelector("input[name=food]:checked").value
+    var tour_type = ""
+    if (form_this.querySelector("input[name=tour_type]:checked"))
+      [].forEach.call(
+        document.querySelectorAll("input[name=tour_type]:checked"),
+        function (input) {
+          tour_type += input.value + "; "
+        }
+      )
+    var wish_tour = ""
+    if (form_this.querySelector("input[name=wish_tour]:checked"))
+      [].forEach.call(
+        document.querySelectorAll("input[name=wish_tour]:checked"),
+        function (input) {
+          wish_tour += input.value + "; "
+        }
+      )
+    if (form_this.querySelector("input[name=tour_activity]:checked"))
+      var tour_activity = form_this.querySelector(
+        "input[name=tour_activity]:checked"
+      ).value
+    if (form_this.querySelector("input[name=residence]:checked"))
+      var residence = form_this.querySelector("input[name=residence]:checked")
+        .value
+    var equipment_rental = ""
+    if (form_this.querySelector("input[name=equipment_rental]:checked"))
+      [].forEach.call(
+        document.querySelectorAll("input[name=equipment_rental]:checked"),
+        function (input) {
+          equipment_rental += input.value + "; "
+        }
+      )
+    if (form_this.querySelector("input[name=physical_training]:checked"))
+      var physical_training = form_this.querySelector(
+        "input[name=physical_training]:checked"
+      ).value
+
+    //calendar
+    if (form_this.querySelector("input[name=start_tour]"))
+      var start_tour = form_this.querySelector("input[name=start_tour]").value
+    if (form_this.querySelector("input[name=end_tour]"))
+      var end_tour = form_this.querySelector("input[name=end_tour]").value
+    if (form_this.querySelector("input[name=city_main]"))
+      var city_main = form_this.querySelector("input[name=city_main]").value
+
+    //present-altay
+    if (document.getElementsByClassName("true-altai__price-js")[0])
+      var price_fixed = document.getElementsByClassName(
+        "true-altai__price-js"
+      )[0].innerHTML
+
+    if (form_this.querySelector("select[name=travel_date]"))
+      var travel_date = form_this.querySelector("select[name=travel_date]")
+        .value
+
+    var subject = form_this.querySelector("input[name=subject]").value
+
+    //anketa_turista
+    var anketa_turista = ""
+    if (form_this.classList.contains("form_anketa-turista")) {
+      var value = (title = name = phone = email = travel_date = subject = ""),
+        subj_count = 1
+      ;[].forEach.call(
+        form_this
+          .getElementsByClassName("form-tourist__wrapper-form")[0]
+          .querySelectorAll(
+            "input,select[name=name_tour],.form-tourist__block-date_active select[name=travel_date],textarea"
+          ),
+        function (input) {
+          if (
+            (input.value != "" &&
+              input.getAttribute("type") != "radio" &&
+              input.getAttribute("type") != "checkbox") ||
+            (input.getAttribute("type") == "radio" && input.checked == true) ||
+            (input.getAttribute("type") == "checkbox" && input.checked == true)
+          ) {
+            if (input.tagName == "SELECT") {
+              title = input.options[0].innerText
+            } else if (
+              closest(input, "form__group") &&
+              input.nextElementSibling
+            ) {
+              title = input.nextElementSibling.textContent
+            }
+            value = input.value
+
+            if (input.getAttribute("name") == "subject") {
+              title =
+                subj_count > 1 ? "\r\n<hr>\r\n " + input.value : input.value
+              value = "#" + subj_count
+              subj_count++
+            }
+
+            anketa_turista +=
+              "<p><strong>" + title + "</strong> - " + value + "</p>"
+          }
+        }
+      )
+    }
+
+    form_this.querySelector("button[type=submit]").classList.add("active-load")
+    form_this
+      .querySelector("button[type=submit]")
+      .setAttribute("disabled", true)
+
+    var query = "act=sender"
+    query += "&name=" + encodeURIComponent(name)
+    query += "&phone=" + encodeURIComponent(phone)
+    query += "&email=" + encodeURIComponent(email)
+    query += "&message=" + encodeURIComponent(message)
+
+    query += "&call=" + encodeURIComponent(call)
+
+    query += "&birthday=" + encodeURIComponent(birthday)
+    query += "&registration_address=" + encodeURIComponent(registration_address)
+    query += "&field_experience=" + encodeURIComponent(field_experience)
+    query += "&fitness_level=" + encodeURIComponent(fitness_level)
+    query += "&experience_tourism=" + encodeURIComponent(experience_tourism)
+
+    query += "&duration_days=" + encodeURIComponent(duration_days)
+    query += "&budget=" + encodeURIComponent(budget)
+    query += "&skype=" + encodeURIComponent(skype)
+    query += "&desired_month=" + encodeURIComponent(desired_month)
+    query += "&number_days=" + encodeURIComponent(number_days)
+    query += "&number_persons=" + encodeURIComponent(number_persons)
+    query += "&gender=" + encodeURIComponent(gender)
+    query += "&age=" + encodeURIComponent(age)
+    query += "&children=" + encodeURIComponent(children)
+    query +=
+      "&experience_active_tours=" + encodeURIComponent(experience_active_tours)
+    query += "&date_arrival=" + encodeURIComponent(date_arrival)
+    query += "&arrival_city=" + encodeURIComponent(arrival_city)
+    query += "&arrival_time=" + encodeURIComponent(arrival_time)
+    query += "&date_disposal=" + encodeURIComponent(date_disposal)
+    query += "&time_disposal=" + encodeURIComponent(time_disposal)
+    query += "&food=" + encodeURIComponent(food)
+    query += "&tour_type=" + encodeURIComponent(tour_type)
+    query += "&wish_tour=" + encodeURIComponent(wish_tour)
+    query += "&tour_activity=" + encodeURIComponent(tour_activity)
+    query += "&residence=" + encodeURIComponent(residence)
+    query += "&equipment_rental=" + encodeURIComponent(equipment_rental)
+    query += "&physical_training=" + encodeURIComponent(physical_training)
+
+    query += "&start_tour=" + encodeURIComponent(start_tour)
+    query += "&end_tour=" + encodeURIComponent(end_tour)
+    query += "&city_main=" + encodeURIComponent(city_main)
+
+    query += "&anketa_turista=" + encodeURIComponent(anketa_turista)
+    query += "&travel_date=" + encodeURIComponent(travel_date)
+
+    query += "&price_fixed=" + encodeURIComponent(price_fixed)
+
+    query +=
+      "&entertainment_check_input=" +
+      encodeURIComponent(entertainment_check_input)
+
+    query += "&message=" + encodeURIComponent(message)
+    query += "&subject=" + encodeURIComponent(subject)
+    query += "&yacity=" + encodeURIComponent(yacity)
+
+    var request = new XMLHttpRequest()
+    request.open("POST", "/sender.php")
+    request.setRequestHeader(
+      "Content-Type",
+      "application/x-www-form-urlencoded"
+    )
+    request.send(query)
+    request.addEventListener("readystatechange", function () {
+      if (request.readyState === 4) {
+        if (request.status === 200) {
+          var data = JSON.parse(request.responseText)
+          if (data.result == "ok") {
+            var content = form_this.querySelector(".form__content")
+            content.style.height = content.scrollHeight + "px"
+            setTimeout(function () {
+              form_this.querySelector(".form__content").style.height = 0
+            }, 0)
+
+            var success = form_this.querySelector(".form__success")
+            success.style.height = success.scrollHeight + "px"
+
+            form_this.reset()
+            form_this
+              .querySelector('button[type="submit"]')
+              .classList.remove("active-load")
+            form_this
+              .querySelector('button[type="submit"]')
+              .removeAttribute("disabled")
+            ;[].forEach.call(
+              form_this.querySelectorAll("input,textarea,select"),
+              function (input) {
+                if (input.nextElementSibling)
+                  input.nextElementSibling.classList.remove("active-input")
+                if (input.getAttribute("type") == "range") input.click()
+                if (input.tagName == "SELECT")
+                  input.classList.add("select-active")
+              }
+            )
+
+            if (form_this.querySelector("input[name=name_tour]")) {
+              form_this
+                .querySelector("input[name=name_tour]")
+                .nextElementSibling.classList.add("active-input")
+            }
+
+            /*----Цели---*/
+            if (
+              form_this.classList.contains("form_anketa") ||
+              form_this.classList.contains("form_school")
+            ) {
+              yaCounter47556529.reachGoal("anketa")
+            } else {
+              //yaCounter47556529.reachGoal('shkola');
+              yaCounter47556529.reachGoal("order")
+            }
+
+            ga("send", "event", "cat", "act")
+            //gtag('event', 'targetclick', { 'event_category': 'cat', 'event_action': 'act', });
+          } else {
+            alert("Возникла ошибка!")
+          }
+        } else {
+          alert("Возникла ошибка!")
+        }
+      }
+    })
+  }
+
+  /*-----------------------------tour-information__sticky-----------------------------*/
+  function information__sticky() {
+    if (window.innerWidth < 992) {
+      if (document.querySelector(".sticky__wrap")) {
+        ;[].forEach.call(document.querySelectorAll(".sticky__wrap"), function (
+          sticky
+        ) {
+          sticky.removeAttribute("style")
+          sticky.classList.remove("position-absolute")
+          sticky.classList.remove("position-fixed")
+        })
+      }
+      if (
+        document.querySelector(".tour-information__description") &&
+        !document.querySelector(
+          ".tour-information__description .tour-information__sticky-wrap"
+        )
+      ) {
+        var information__sticky = document
+          .getElementsByClassName("tour-information__sticky")[0]
+          .cloneNode(true)
+        document
+          .getElementsByClassName("tour-information__description")[0]
+          .appendChild(information__sticky)
+      }
+    } else {
+      if (
+        document.querySelector(
+          ".tour-information__description .tour-information__sticky"
+        )
+      )
+        document
+          .querySelector(
+            ".tour-information__description .tour-information__sticky"
+          )
+          .parentNode.removeChild(
+            document.querySelector(
+              ".tour-information__description .tour-information__sticky"
+            )
+          )
+    }
+  }
+  information__sticky()
+
+  /*-----------------------------modal open click-----------------------------*/
+  var body = document.getElementsByTagName("body")[0],
+    entertainment_check_input = ""
+  ;[].forEach.call(document.querySelectorAll("[data-modal]"), function (
+    modal_open
+  ) {
+    modal_open.addEventListener("click", function (e) {
+      e.preventDefault()
+
+      var body_width_normal = body.clientWidth
+      body.classList.add("body-active")
+      var modal = document.getElementsByClassName(
+        modal_open.getAttribute("data-modal")
+      )[0]
+      modal.classList.add("active")
+      modal.focus()
+
+      var body_width_active = body.clientWidth - body_width_normal
+      body.style.paddingRight = body_width_active + "px"
+
+      if (menu.classList.contains("menu_fixed"))
+        menu_wrap.style.paddingRight = body_width_active + "px"
+
+      if (window.pageYOffset > menu.offsetHeight) {
+        menu_wrap.style.paddingRight = body_width_active + "px"
+        menu.classList.remove("menu_translate")
+      }
+
+      if (modal_open.getAttribute("data-title"))
+        var data_title = modal_open.getAttribute("data-title")
+      var data_subtitle = modal_open.getAttribute("data-subtitle")
+        ? modal_open.getAttribute("data-subtitle")
+        : ""
+
+      if (data_title)
+        modal.querySelector(".modal__title").innerHTML = data_title
+
+      //all-tours__btn
+      if (modal_open.classList.contains("all-tours__btn")) {
+        var attr = [
+          closest(modal_open, "all-tours-page__block").getAttribute(
+            "data-type"
+          ),
+          closest(modal_open, "all-tours-page__block").getAttribute(
+            "data-time"
+          ),
+          closest(modal_open, "all-tours-page__block").getAttribute(
+            "data-season"
+          ),
+          closest(modal_open, "all-tours-page__block").getAttribute(
+            "data-price"
+          ),
+        ]
+        var split_type = closest(modal_open, "all-tours-page__block")
+            .getAttribute("data-type")
+            .split("/"),
+          split_season = closest(modal_open, "all-tours-page__block")
+            .getAttribute("data-season")
+            .split("/"),
+          select = document.querySelectorAll(".form-search select"),
+          title = (info = "")
+
+        for (var i = 0; i < attr.length; i++) {
+          if (
+            select[i].selectedIndex > 0 &&
+            select[i].options[select[i].selectedIndex].text == attr[i]
+          )
+            data_subtitle +=
+              select[i].options[0].text +
+              " - " +
+              select[i].options[select[i].selectedIndex].text +
+              "; "
+
+          if (split_type.length > 1) {
+            for (var j = 0; j < split_type.length; j++) {
+              if (
+                select[i].selectedIndex > 0 &&
+                select[i].options[select[i].selectedIndex].text == split_type[j]
+              )
+                data_subtitle +=
+                  select[i].options[0].text +
+                  " - " +
+                  select[i].options[select[i].selectedIndex].text +
+                  "; "
+            }
+          }
+          if (split_season.length > 1) {
+            for (var j = 0; j < split_season.length; j++) {
+              if (
+                select[i].selectedIndex > 0 &&
+                select[i].options[select[i].selectedIndex].text ==
+                  split_season[j]
+              )
+                data_subtitle +=
+                  select[i].options[0].text +
+                  " - " +
+                  select[i].options[select[i].selectedIndex].text +
+                  "; "
+            }
+          }
+        }
+      }
+
+      //modal-video
+      if (modal_open.getAttribute("data-modal") == "modal-video") {
+        modal.getElementsByClassName("modal-video__wrapper")[0].innerHTML =
+          '<iframe src="https://www.youtube.com/embed/' +
+          this.getAttribute("data-video") +
+          '?enablejsapi=1&autoplay=1&rel=0" allowfullscreen width="220" height="200" class="modal-video__iframe position-relative d-table mx-auto"></iframe>'
+      }
+
+      if (data_subtitle)
+        modal.querySelector(".modal__subtitle").innerHTML = data_subtitle
+      if (modal.querySelector("input[name=subject]")) {
+        modal.querySelector("input[name=subject]").value = data_title
+          ? data_title + "<br> " + data_subtitle
+          : data_subtitle
+      }
+      if (modal_open.getAttribute("data-btn"))
+        modal.querySelector(
+          'button[type="submit"]'
+        ).innerHTML = modal_open.getAttribute("data-btn")
+
+      if (modal_open.getAttribute("data-subject"))
+        modal.querySelector(
+          "input[name=subject]"
+        ).value = modal_open.getAttribute("data-subject")
+      if (modal_open.classList.contains("intro__btn_data")) {
+        modal.querySelector("input[name=subject]").value +=
+          "\n Дата: " +
+          document.getElementsByClassName("intro-tour__text_active")[0]
+            .textContent
+      }
+
+      //reset
+      if (modal.querySelector("form")) modal.querySelector("form").reset()
+      if (modal.getElementsByTagName("input")) {
+        ;[].forEach.call(modal.getElementsByTagName("input"), function (input) {
+          if (input.nextElementSibling)
+            input.nextElementSibling.classList.remove("active-input")
+          if (input.getAttribute("type") == "range") input.click()
+        })
+      }
+    })
+  })
+
+  /*-----------------------------modal close click-----------------------------*/
+  var menu = document.getElementsByClassName("menu")[0],
+    menu_wrap = document.getElementsByClassName("menu__wrap")[0]
+
+  ;[].forEach.call(document.querySelectorAll(".close,body"), function (
+    modal_close
+  ) {
+    modal_close.addEventListener("click", function (e) {
+      if (e.target == this && body.classList.contains("body-active"))
+        close_modal()
+    })
+    modal_close.addEventListener("keydown", function (e) {
+      if (e.keyCode == 27 && body.classList.contains("body-active"))
+        close_modal()
+    })
+  })
+
+  function close_modal() {
+    //xcalend
+    if (
+      document.querySelector(".modal.active .xCal") &&
+      document.getElementsByClassName("xcalend")[0]
+    ) {
+      document.getElementsByClassName("xcalend")[0].style.display = "none"
+    }
+
+    //modal-video
+    var video = document.getElementsByClassName("modal-video")[0]
+    if (video) {
+      if (video.classList.contains("active")) {
+        setTimeout(function () {
+          var remove = video.querySelector(".modal-video__wrapper iframe")
+          remove.parentNode.removeChild(remove) //.remove()
+        }, 500)
+      }
+    }
+
+    ;[].forEach.call(document.getElementsByClassName("modal"), function (
+      modal
+    ) {
+      modal.classList.remove("active")
+    })
+    setTimeout(function () {
+      body.classList.remove("body-active")
+      body.style.cssText = menu_wrap.style.cssText == null
+      if (window.pageYOffset > menu.offsetHeight)
+        menu.classList.add("menu_translate")
+    }, 200)
+  }
+
+  /*-----------------------------repeat-sender-----------------------------*/
+  ;[].forEach.call(
+    document.querySelectorAll('[data-trigger="repeat-sender"]'),
+    function (repeat) {
+      repeat.addEventListener("click", function (e) {
+        e.preventDefault()
+        var form_content = closest(repeat, "form").querySelector(
+          ".form__content"
+        )
+        form_content.style.height = form_content.scrollHeight + "px"
+        closest(repeat, "form").querySelector(".form__success").style.height = 0
+        setTimeout(function () {
+          form_content.removeAttribute("style")
+        }, 500)
+      })
+    }
+  )
+
+  /*-----------------------------menu-----------------------------*/
+  //if(window.innerWidth < 1200) {
+  //var new_block_phon=document.getElementsByClassName('menu__wrapper-link')[0]
+  //document.querySelector('.menu__wrap .container').appendChild(new_block_phon);
+  //}
+
+  ;[].forEach.call(
+    document.getElementsByClassName("menu__link-open"),
+    function (menu_open) {
+      menu_open.addEventListener("click", function (e) {
+        e.preventDefault()
+
+        var block_open =
+          window.innerWidth > 1200
+            ? closest(menu_open, "li").getElementsByClassName(
+                "menu__additionally"
+              )[0]
+            : document.getElementsByClassName("menu__wrapper-link")[0]
+
+        if (!this.classList.contains("menu__link-open_active")) {
+          this.classList.add("menu__link-open_active")
+          block_open.style.height = block_open.scrollHeight + "px"
+        } else {
+          this.classList.remove("menu__link-open_active")
+          block_open.style.height = 0
+        }
+      })
+    }
+  )
+
+  /*-----------------------------menu__link-hover-----------------------------*/
+  ;[].forEach.call(
+    document.getElementsByClassName("menu__link-hover"),
+    function (menu_hover) {
+      menu_hover.addEventListener("mouseenter", function (e) {
+        e.preventDefault()
+        var block_open = closest(menu_hover, "li").getElementsByClassName(
+            "menu__additionally"
+          )[0],
+          block_content = closest(menu_hover, "li").getElementsByClassName(
+            "menu__additionally-content"
+          )[0]
+        this.classList.add("menu__link-hover_active")
+
+        if (window.innerHeight > block_open.scrollHeight) {
+          block_content.removeAttribute("style")
+          block_open.style.height = block_open.scrollHeight + "px"
+        } else {
+          block_open.style.height = window.innerHeight + "px"
+          block_content.style.height =
+            window.innerHeight -
+            parseInt(getComputedStyle(block_content).paddingBottom) * 2 +
+            "px"
+        }
+      })
+    }
+  )
+
+  /*-----------------------------menu__link mouseleave-----------------------------*/
+  ;[].forEach.call(
+    document.getElementsByClassName("menu__additionally_hover"),
+    function (menu_hover_out) {
+      menu_hover_out.addEventListener("mouseleave", function (e) {
+        e.preventDefault()
+        var block_open = closest(menu_hover_out, "li").getElementsByClassName(
+          "menu__additionally"
+        )[0]
+        closest(menu_hover_out, "li")
+          .querySelector(".menu__link")
+          .classList.remove("menu__link-hover_active")
+        block_open.style.height = 0
+      })
+    }
+  )
+
+  /*-----------------------------scroll function-----------------------------*/
+  var section = document.querySelectorAll("section"),
+    sticky = document.getElementsByClassName("sticky")[0],
+    sticky__wrap = document.getElementsByClassName("sticky__wrap")[0],
+    container = document.getElementsByClassName("container")[0],
+    phone_new = (lazy = true),
+    position_form = sticky__wrap
+      ? container.offsetWidth -
+        sticky__wrap.offsetWidth +
+        container.offsetLeft -
+        parseInt(getComputedStyle(container).paddingRight)
+      : ""
+  /*position_form = sticky.offsetLeft+sticky__wrap.offsetLeft*/
+
+  window.onscroll = function () {
+    var scroll_top = window.pageYOffset
+    //menu
+    fixed_menu()
+
+    for (var i = 0; i < section.length; i++) {
+      var top = section[i].offsetTop,
+        bottom = section[i].clientHeight + top,
+        top_height = top - window.innerHeight
+
+      if (scroll_top > top - window.innerHeight * 3) {
+        /*-----------------------------lazy-load-----------------------------*/
+        if (lazy) {
+          ;[].forEach.call(
+            section[i].querySelectorAll("img[data-lazy],source[data-lazy]"),
+            function (img) {
+              lazy_src(img, "data-lazy")
+            }
+          )
+        }
+        section[i].classList.remove("lazy-bg")
+        if (section[i].querySelector(".lazy-bg"))
+          [].forEach.call(section[i].querySelectorAll(".lazy-bg"), function (
+            lazy
+          ) {
+            lazy.classList.remove("lazy-bg")
+          })
+      }
+
+      /*-----------------------------animation-----------------------------*/
+      if (
+        scroll_top > top_height &&
+        scroll_top < bottom &&
+        window.innerWidth > 992
+      ) {
+        if (!section[i].classList.contains("animated")) {
+          section[i].classList.add("animated")
+          return false
+        }
+      } else {
+        section[i].classList.remove("animated")
+      }
+    }
+
+    //scroll_sticky
+    if (window.innerWidth > 992) scroll_sticky(scroll_top)
+  }
+
+  function fixed_menu() {
+    var scroll_top = window.pageYOffset
+    //menu
+    if (scroll_top > menu.offsetHeight * 4) {
+      menu.classList.add("menu_active")
+      menu.classList.add("menu_color")
+
+      if (window.innerWidth < 768) {
+        var height_sm = document.querySelector(".menu__sm").offsetHeight
+        height_sm += parseInt(
+          getComputedStyle(document.querySelector(".menu__sm")).marginBottom
+        )
+      } else {
+        document.querySelector(
+          ".menu__sm"
+        ).style.cssText = null
+        if (document.querySelector(".menu__block-logotype .menu__phone"))
+          document
+            .querySelector(".menu__block-logotype .menu__phone")
+            .parentNode.removeChild(
+              document.querySelector(".menu__block-logotype .menu__phone")
+            )
+        phone_new = true
+      }
+    } else {
+      if (window.innerWidth < 768) {
+        document.querySelector(
+          ".menu__sm"
+        ).style.cssText = null
+        if (document.querySelector(".menu__block-logotype .menu__phone"))
+          document
+            .querySelector(".menu__block-logotype .menu__phone")
+            .parentNode.removeChild(
+              document.querySelector(".menu__block-logotype .menu__phone")
+            ).remove()
+        phone_new = true
+      }
+      if (!menu.classList.contains("menu_fixed"))
+        menu.classList.remove("menu_color")
+      menu.classList.remove("menu_active")
+    }
+  }
+
+  widget_active = widget_active_func_top = widget_resize = false
+  function scroll_sticky(scroll_top) {
+    if (sticky && window.innerWidth > 992) {
+      var menu_height = menu.classList.contains("menu_active")
+          ? menu.scrollHeight
+          : 0,
+        sum =
+          sticky.scrollHeight +
+          (scroll_top + sticky.getBoundingClientRect().top) -
+          (sticky__wrap.scrollHeight + menu_height)
+
+      if (
+        0 >= sticky.getBoundingClientRect().top - menu_height &&
+        sum >= scroll_top
+      ) {
+        if (
+          !sticky__wrap.classList.contains("position-fixed") ||
+          widget_resize
+        ) {
+          sticky__wrap.classList.remove("position-absolute")
+          sticky__wrap.classList.add("position-fixed")
+          //sticky__wrap.style.right='auto'
+          //sticky__wrap.style.bottom=null
+          //sticky__wrap.style.top=menu_height +'px'
+          //sticky__wrap.style.left=position_form+'px'
+          sticky__wrap.style.cssText =
+            "right:auto;bottom:auto;top:" +
+            menu_height +
+            "px;left:" +
+            position_form +
+            "px"
+          widget_active = true
+          widget_resize = false
+        }
+        if (
+          menu.classList.contains("menu_active") &&
+          widget_active &&
+          !widget_active_func_top &&
+          sticky.scrollHeight - window.innerHeight >= scroll_top
+        ) {
+          sticky__wrap.style.top = menu_height + "px"
+          widget_active_func_top = true
+        }
+        if (!menu.classList.contains("menu_active") && widget_active_func_top) {
+          sticky__wrap.style.top = menu_height + "px"
+          widget_active_func_top = false
+        }
+      } else if (sum > scroll_top) {
+        if (widget_active) {
+          sticky__wrap.classList.remove("position-fixed")
+          sticky__wrap.classList.remove("position-absolute")
+          sticky__wrap.removeAttribute("style")
+          widget_active = widget_active_func_top = false
+        }
+      } else if (scroll_top >= sticky.scrollHeight - window.innerHeight) {
+        if (!sticky__wrap.classList.contains("position-absolute")) {
+          widget_active = true
+        }
+        if (widget_active) {
+          sticky__wrap.classList.remove("position-fixed")
+          sticky__wrap.removeAttribute("style")
+          sticky__wrap.classList.add("position-absolute")
+          sticky__wrap.style.top = "auto"
+          sticky__wrap.style.bottom = 0
+          sticky__wrap.style.right = getComputedStyle(container).paddingRight
+          widget_active = widget_active_func_top = false
+        }
+      }
+    }
+  }
+  scroll_sticky((scroll_top = window.pageYOffset))
+
+  /*-----------------------------slider-----------------------------*/
+  ;[].forEach.call(
+    document.querySelectorAll(".all-tours .js_simple_dots,.big-dots"),
+    function (simple_dots) {
+      var delete_count = 0
+      if (
+        window.innerWidth > 1200 &&
+        !simple_dots.querySelector(".js_dots-normal")
+      )
+        delete_count = 2
+      if (
+        (window.innerWidth > 992 &&
+          !simple_dots.querySelector(".js_dots-normal")) ||
+        (window.innerWidth > 992 &&
+          simple_dots.classList.contains("comment__dots"))
+      )
+        delete_count = 1
+
+      var dot_count =
+          simple_dots.querySelectorAll(".js_slide").length - delete_count,
+        dot_container = simple_dots.querySelector(".js_dots"),
+        dot_list_item = document.createElement("li")
+
+      function handleDotEvent(e) {
+        if (e.type === "before.lory.init") {
+          for (var i = 0; i < dot_count; i++) {
+            var clone = dot_list_item.cloneNode()
+            dot_container.appendChild(clone)
+          }
+          var dotContainerChildClassList = dot_container.childNodes[0].classList
+          if (dotContainerChildClassList) dotContainerChildClassList.add("active")
+        }
+        if (e.type === "after.lory.init") {
+          for (var i = 0; i < dot_count; i++) {
+            dot_container.childNodes[i].addEventListener("click", function (e) {
+              if (!this.classList.contains("active")) {
+                dot_navigation_slider.slideTo(
+                  Array.prototype.indexOf.call(
+                    dot_container.childNodes,
+                    e.target
+                  )
+                )
+              }
+            })
+          }
+        }
+        if (e.type === "after.lory.slide") {
+          for (var i = 0; i < dot_container.childNodes.length; i++) {
+            var dotContainerChildClassList = dot_container.childNodes[i].classList
+            if (dotContainerChildClassList) dotContainerChildClassList.remove("active")
+          }
+          const currentSlideDotClassList = dot_container.childNodes[e.detail.currentSlide].classList
+          if (currentSlideDotClassList) currentSlideDotClassList.add("active")
+        }
+        if (e.type === "on.lory.resize") {
+          for (var i = 0, len = dot_container.childNodes.length; i < len; i++) {
+            dot_container.childNodes[i].classList.remove("active")
+          }
+          dot_container.childNodes[0].classList.add("active")
+        }
+      }
+
+      simple_dots.addEventListener("before.lory.init", handleDotEvent)
+      simple_dots.addEventListener("after.lory.init", handleDotEvent)
+      simple_dots.addEventListener("after.lory.slide", handleDotEvent)
+      simple_dots.addEventListener("on.lory.resize", handleDotEvent)
+
+      var dot_navigation_slider = lory(simple_dots, {
+        rewind: true,
+        slideSpeed: 800,
+        ease: "cubic-bezier(0.455, 0.03, 0.515, 0.955)",
+      })
+    }
+  )
+
+  if (document.querySelector(".mobile-dots")) {
+    if (window.innerWidth < 576) {
+      document.querySelector(".mobile-dots").classList.add("js_simple_dots")
+      if (
+        document
+          .querySelector(".mobile-dots")
+          .classList.contains("mobile-data-dots")
+      ) {
+        lory(document.querySelector(".mobile-data-dots.js_simple_dots"))
+      } else {
+        lory(document.querySelector(".mobile-dots.js_simple_dots"), {
+          infinite: 1,
+        })
+      }
+    }
+  }
+
+  /*-----------tour-information__comment-dots-----------*/
+  if (document.querySelector(".tour-information__comment-dots")) {
+    ;[].forEach.call(
+      document.querySelectorAll(".tour-information__comment-dots"),
+      function (img_comment) {
+        img_comment.addEventListener("on.lory.resize", function (e) {
+          if (e.type === "on.lory.resize") {
+            img_comment.querySelector(".js_prev").classList.add("disabled")
+            img_comment.querySelector(".js_next").classList.remove("disabled")
+          }
+        })
+        lory(img_comment)
+      }
+    )
+  }
+
+  /*-----------/*-----------img-slider-----------*/
+  if (document.querySelector(".img-slider")) {
+    ;[].forEach.call(document.querySelectorAll(".img-slider"), function (
+      img_slider
+    ) {
+      img_slider.addEventListener("on.lory.resize", function (e) {
+        if (e.type === "on.lory.resize") {
+          img_slider.querySelector(".js_prev").classList.add("disabled")
+          img_slider.querySelector(".js_next").classList.remove("disabled")
+        }
+      })
+      lory(img_slider)
+    })
+  }
+
+  /*-----------------------------btn hover-----------------------------*/
+  function btn_hover() {
+    ;[].forEach.call(document.getElementsByClassName("btn"), function (btn) {
+      btn.onmousemove = btn_hover_func
+    })
+  }
+  btn_hover()
+  function btn_hover_func(e) {
+    e.target.style.setProperty("--x", e.offsetX + "px")
+    e.target.style.setProperty("--y", e.offsetY + "px")
+  }
+
+  /*-----------------------------all-tours-page-----------------------------*/
+  if (document.getElementsByClassName("all-tours-page")[0]) {
+    ;[].forEach.call(
+      document.querySelectorAll(
+        ".all-tours-page img[data-lazy],.all-tours-page source[data-lazy]"
+      ),
+      function (img) {
+        lazy_src(img, "data-lazy")
+      }
+    )
+    var page_number_sum = document.getElementsByClassName(
+      "all-tours-page__number-sum"
+    )[0]
+    if (page_number_sum)
+      page_number_sum.textContent = document.getElementsByClassName(
+        "all-tours__wrap"
+      ).length
+  }
+
+  /*-----------------------------intro-blog-----------------------------*/
+  if (document.getElementsByClassName("intro-blog__sticky")[0]) {
+    ;[].forEach.call(
+      document.querySelectorAll(
+        ".intro-blog__sticky img[data-lazy],.intro-blog__sticky source[data-lazy]"
+      ),
+      function (img) {
+        lazy_src(img, "data-lazy")
+      }
+    )
+  }
+
+  /*-----------------------------form-search__btn-----------------------------*/
+  if (document.getElementsByClassName("form-search__btn")[0]) {
+    document
+      .getElementsByClassName("form-search__btn")[0]
+      .addEventListener("click", function (e) {
+        e.preventDefault()
+        var count = 0,
+          error = true,
+          select = document.querySelectorAll(".form-search select")
+
+        ;[].forEach.call(select, function (select_class) {
+          select_class.classList.remove("is-error")
+        })
+
+        //search
+        ;[].forEach.call(
+          document.querySelectorAll(".all-tours-page__block"),
+          function (block) {
+            var attr = [
+              block.getAttribute("data-type"),
+              block.getAttribute("data-time"),
+              block.getAttribute("data-season"),
+              block.getAttribute("data-price"),
+            ]
+
+            block.style.display = "block"
+
+            var split_type = block.getAttribute("data-type").split("/"),
+              split_season = block.getAttribute("data-season").split("/")
+
+            for (var i = 0; i < attr.length; i++) {
+              if (split_type.length > 1) {
+                for (var j = 0; j < split_type.length; j++) {
+                  if (
+                    select[i].selectedIndex > 0 &&
+                    select[i].options[select[i].selectedIndex].text ==
+                      split_type[j]
+                  ) {
+                    i++
+                    error = false
+                  }
+                }
+              }
+              if (split_season.length > 1) {
+                for (var j = 0; j < split_season.length; j++) {
+                  if (
+                    select[i].selectedIndex > 0 &&
+                    select[i].options[select[i].selectedIndex].text ==
+                      split_season[j]
+                  ) {
+                    i++
+                    error = false
+                  }
+                }
+              }
+
+              if (
+                select[i].selectedIndex > 0 &&
+                select[i].options[select[i].selectedIndex].text != attr[i]
+              ) {
+                block.style.display = "none"
+                error = false
+              }
+            }
+
+            if (window.getComputedStyle(block).display == "block") count++
+          }
+        )
+
+        //animation all-tours-page__number-sum
+        var count_timer = page_number_sum.textContent,
+          timeout = setInterval(function () {
+            if (count > count_timer) {
+              page_number_sum.textContent = count_timer
+              count_timer++
+            } else if (count < count_timer) {
+              page_number_sum.textContent = count_timer
+              count_timer--
+            } else {
+              page_number_sum.textContent = count_timer
+              clearInterval(timeout)
+            }
+          }, 60)
+
+        // error click
+        if (error) {
+          ;[].forEach.call(select, function (select_class) {
+            select_class.classList.add("is-error")
+          })
+          return false
+        }
+
+        //scroll block
+        if (window.innerWidth > 992) {
+          var attr = document.querySelector(".all-tours-page"),
+            offsetTop = attr.offsetTop,
+            i = 0 //speed
+          function scroll() {
+            window.scrollBy(0, i)
+            if (
+              window.pageYOffset > offsetTop &&
+              window.pageYOffset != offsetTop
+            ) {
+              i -= 1
+              requestAnimationFrame(scroll)
+              return false
+            }
+            window.scrollBy(0, offsetTop)
+          }
+          scroll()
+        } else {
+          var attr = document.querySelector(".sticky-content"),
+            offsetTop = attr.offsetTop,
+            pageYOffset_old = 0,
+            i = 0 //speed
+          function scroll() {
+            window.scrollBy(0, i)
+            offsetTop =
+              attr.offsetTop -
+              menu.offsetHeight -
+              parseInt(getComputedStyle(attr).marginTop)
+            if (
+              offsetTop > window.pageYOffset &&
+              window.pageYOffset != pageYOffset_old
+            ) {
+              i += 1
+              pageYOffset_old = window.pageYOffset
+              requestAnimationFrame(scroll)
+              return false
+            }
+            window.scrollBy(0, -(window.pageYOffset - offsetTop))
+          }
+          scroll()
+        }
+      })
+  }
+
+  if (document.getElementsByClassName("form-search__reset")[0]) {
+    document
+      .getElementsByClassName("form-search__reset")[0]
+      .addEventListener("click", function (e) {
+        document.getElementsByClassName("form-search")[0].reset()
+      })
+  }
+
+  /*-----------------------------faq-----------------------------*/
+  ;[].forEach.call(
+    document.getElementsByClassName("faq__wrap-title"),
+    function (faq) {
+      faq.addEventListener("click", function (e) {
+        e.preventDefault()
+
+        if (!this.classList.contains("faq__wrap-title_active")) {
+          this.classList.add("faq__wrap-title_active")
+          faq.nextElementSibling.classList.add("faq__wrap-hidden_active")
+          faq.nextElementSibling.style.height =
+            faq.nextElementSibling.scrollHeight + "px"
+        } else {
+          this.classList.remove("faq__wrap-title_active")
+          faq.nextElementSibling.classList.remove("faq__wrap-hidden_active")
+          faq.nextElementSibling.style.height = 0
+        }
+      })
+    }
+  )
+
+  /*-----------------------------lightGallery-----------------------------*/
+  ;[].forEach.call(document.getElementsByClassName("lightgallery"), function (
+    img_galery
+  ) {
+    lightGallery(img_galery, {
+      cssEasing: "cubic-bezier(0.455, 0.030, 0.515, 0.955)",
+    })
+  })
+
+  /*-----------------------------video-----------------------------*/
+  ;[].forEach.call(document.getElementsByClassName("video__content"), function (
+    video
+  ) {
+    video.addEventListener("click", function (e) {
+      e.preventDefault()
+
+      if (this.getAttribute("data-vimeo")) {
+        closest(this, "video").innerHTML =
+          '<iframe src="https://player.vimeo.com/video/' +
+          this.getAttribute("data-video") +
+          '?api=1&autoplay=1&title=0&byline=0&portrait=0" allowfullscreen width="220" height="200" class="video-house__iframe position-relative w-100 h-100 d-table mx-auto"></iframe>'
+      } else {
+        closest(this, "video").innerHTML =
+          '<iframe src="https://www.youtube.com/embed/' +
+          this.getAttribute("data-video") +
+          '?enablejsapi=1&autoplay=1&rel=0" allowfullscreen width="220" height="200" class="video-house__iframe position-relative w-100 h-100 d-table mx-auto"></iframe>'
+      }
+    })
+  })
+
+  /*-----------------------------tour-information__details-title-----------------------------*/
+  ;[].forEach.call(
+    document.getElementsByClassName("tour-information__details-title"),
+    function (day_title) {
+      if (
+        window.innerWidth < 992 &&
+        day_title.nextElementSibling.classList.contains(
+          "tour-information__details-wrap_active"
+        )
+      ) {
+        day_title.classList.remove("tour-information__details-title_active")
+        day_title.nextElementSibling.classList.remove(
+          "tour-information__details-wrap_active"
+        )
+      }
+
+      day_title.addEventListener("click", function (e) {
+        e.preventDefault()
+
+        if (
+          day_title.nextElementSibling.classList.contains(
+            "tour-information__details-wrap_active"
+          )
+        ) {
+          day_title.classList.remove("tour-information__details-title_active")
+          setTimeout(function () {
+            day_title.nextElementSibling.style.height = 0
+          }, 0)
+          day_title.nextElementSibling.style.height =
+            day_title.nextElementSibling.scrollHeight + "px"
+          setTimeout(function () {
+            day_title.nextElementSibling.classList.remove(
+              "tour-information__details-wrap_active"
+            )
+            scroll_sticky((scroll_top = window.pageYOffset))
+          }, 400)
+        } else {
+          day_title.classList.add("tour-information__details-title_active")
+          setTimeout(function () {
+            day_title.nextElementSibling.classList.add(
+              "tour-information__details-wrap_active"
+            )
+            scroll_sticky((scroll_top = window.pageYOffset))
+          }, 400)
+
+          ;[].forEach.call(
+            day_title.nextElementSibling.querySelectorAll(
+              "img[data-lazy_slider],source[data-lazy_slider]"
+            ),
+            function (img) {
+              lazy_src(img, "data-lazy_slider")
+              img.removeAttribute("data-lazy_slider")
+              img.onload = function () {
+                if (closest(img, "active-load"))
+                  closest(img, "active-load").classList.remove("active-load")
+                closest(img, "tour-information__details-wrap").style.height =
+                  closest(img, "tour-information__details-inner").scrollHeight +
+                  "px"
+              }
+            }
+          )
+          day_title.nextElementSibling.style.height =
+            day_title.nextElementSibling.scrollHeight + "px"
+        }
+      })
+    }
+  )
+
+  /*-----------------------------tour-information__link-count-----------------------------*/
+  if (document.getElementsByClassName("tour-information__link-count")[0]) {
+    ;[].forEach.call(
+      document.querySelectorAll(".tour-information__link-count"),
+      function (link) {
+        link.textContent = closest(
+          link,
+          "tour-information__photo-wrap"
+        ).querySelectorAll(".tour-information__link-gallery_hidden").length
+      }
+    )
+  }
+
+  /*-----------------------------tour-individual-form__form input[type="range"]-----------------------------*/
+  if (document.getElementsByClassName("modal-individual__form")[0]) {
+    ;[].forEach.call(
+      document.querySelectorAll('.modal-individual__form input[type="range"]'),
+      function (range) {
+        range.addEventListener("click", function (e) {
+          range_func(e)
+        })
+        range.addEventListener("input", function (e) {
+          range_func(e)
+        })
+        range.click()
+      }
+    )
+    function range_func(e) {
+      var min = e.target.min,
+        max = e.target.max,
+        val = e.target.value
+      e.target.style.backgroundSize =
+        ((val - min) * 100) / (max - min) + "% 100%"
+      closest(e.target, "modal-individual__range-wrapper").querySelector(
+        ".modal-individual__range-summ"
+      ).innerHTML = e.target.value
+        .toString()
+        .replace(/(\d{1,3})(?=((\d{3})*([^\d]|$)))/g, " $1")
+    }
+  }
+
+  /*-----------------------------tour-individual-form__form input[type="range"]-----------------------------*/
+  if (document.getElementsByClassName("tour-individual-form__form")[0]) {
+    ;[].forEach.call(
+      document.querySelectorAll(
+        '.tour-individual-form__form input[type="range"]'
+      ),
+      function (range) {
+        range.addEventListener("click", function (e) {
+          range_func(e)
+        })
+        range.addEventListener("input", function (e) {
+          range_func(e)
+        })
+        range.click()
+      }
+    )
+    function range_func(e) {
+      var min = e.target.min,
+        max = e.target.max,
+        val = e.target.value
+      e.target.style.backgroundSize =
+        ((val - min) * 100) / (max - min) + "% 100%"
+      closest(e.target, "tour-individual-form__range-wrapper").querySelector(
+        ".tour-individual-form__range-summ"
+      ).innerHTML = e.target.value
+        .toString()
+        .replace(/(\d{1,3})(?=((\d{3})*([^\d]|$)))/g, " $1")
+    }
+  }
+
+  /*-----------------------------tour-individual-form-tourist__block-title-----------------------------*/
+  ;[].forEach.call(
+    document.getElementsByClassName(
+      "tour-individual-form-tourist__block-title"
+    ),
+    function (block_title) {
+      block_title.addEventListener("click", function (e) {
+        var main_block =
+          window.innerWidth > 768
+            ? "tour-individual-form-tourist__block"
+            : "tour-individual-form-tourist__content"
+        var block_open =
+          window.innerWidth > 768
+            ? "tour-individual-form-tourist__block_active"
+            : "tour-individual-form-tourist__block-title_active"
+
+        if (
+          (closest(block_title, main_block).classList.contains(block_open) &&
+            window.innerWidth > 768) ||
+          (block_title.classList.contains(block_open) &&
+            window.innerWidth < 768)
+        ) {
+          ;[].forEach.call(
+            closest(block_title, main_block).querySelectorAll(".form__group"),
+            function (group) {
+              group.style.height = group.scrollHeight + "px"
+              setTimeout(function () {
+                group.style.height = 0
+              }, 1)
+              group.classList.remove(
+                "tour-individual-form-tourist__form__group_active"
+              )
+            }
+          )
+          if (window.innerWidth > 768) {
+            closest(block_title, main_block).classList.remove(block_open)
+          } else {
+            block_title.classList.remove(block_open)
+          }
+        } else {
+          ;[].forEach.call(
+            closest(block_title, main_block).querySelectorAll(".form__group"),
+            function (group) {
+              group.style.height = group.scrollHeight + "px"
+              group.classList.add(
+                "tour-individual-form-tourist__form__group_active"
+              )
+            }
+          )
+          if (window.innerWidth > 768) {
+            closest(block_title, main_block).classList.add(block_open)
+          } else {
+            block_title.classList.add(block_open)
+          }
+        }
+      })
+    }
+  )
+
+  /*-----------------------------form-tourist__btn-add-----------------------------*/
+  if (document.getElementsByClassName("form-tourist__btn-add")[0]) {
+    var radio_new = 1
+    document
+      .getElementsByClassName("form-tourist__btn-add")[0]
+      .addEventListener("click", function (e) {
+        e.preventDefault()
+
+        var inner = closest(e.target, "section")
+          .querySelector(".form-tourist__form_active")
+          .cloneNode(true)
+        inner.classList.add("form-tourist_new")
+        inner.querySelector(".form-tourist__form-content").classList.add("mt-5")
+        var button = document.createElement("button")
+        button.className =
+          "form-tourist__btn-del d-table mx-auto mt-2 border-0 p-0 animation animation-link-hover"
+        button.setAttribute("type", "button")
+        button.innerHTML = "Удалить участника"
+        inner.appendChild(button)
+        if (inner.getElementsByClassName("form-tourist__block-date_active")[0])
+          inner
+            .getElementsByClassName("form-tourist__block-date_active")[0]
+            .classList.remove("form-tourist__block-date_active")
+
+        ;[].forEach.call(inner.querySelectorAll("input,select"), function (
+          input
+        ) {
+          if (input.getAttribute("type") == "radio")
+            input.setAttribute(
+              "name",
+              input.getAttribute("name") + "_" + radio_new
+            )
+          if (!input.classList.contains("form-tourist__input-dont")) {
+            input.value = ""
+            input.nextElementSibling.classList.remove("active-input")
+          }
+          if (input.getAttribute("name") == "confirmation")
+            input.checked = false
+          if (input.tagName == "SELECT") input.classList.add("select-active")
+        })
+
+        closest(e.target, "section")
+          .querySelector(".form-tourist__wrapper-form")
+          .appendChild(inner)
+        form_sender()
+        form_mask()
+        btn_hover()
+        name_tour_f()
+
+        btn_del()
+        var new_inner = document.getElementsByClassName("form-tourist_new")[0]
+        new_inner.classList.remove("form-tourist__form_active")
+        new_inner.style.height = new_inner.scrollHeight + "px"
+        new_inner.classList.remove("form-tourist_new")
+        new_inner.classList.add("form-tourist__form_active")
+        new_inner.classList.add("form-tourist__form_del")
+        setTimeout(function () {
+          new_inner.removeAttribute("style")
+        }, 600)
+        radio_new++
+        input_blur()
+        select_active()
+      })
+  }
+
+  //del
+  function btn_del() {
+    ;[].forEach.call(
+      document.getElementsByClassName("form-tourist__btn-del"),
+      function (btn_del) {
+        btn_del.addEventListener("click", btn_del_func)
+      }
+    )
+  }
+  function btn_del_func(e) {
+    e.preventDefault()
+    closest(e.target, "form-tourist__form").style.height =
+      closest(e.target, "form-tourist__form").scrollHeight + "px"
+    closest(e.target, "form-tourist__form").classList.remove(
+      "form-tourist__form_active"
+    )
+    setTimeout(function () {
+      closest(e.target, "form-tourist__form").style.height = "0px"
+    }, 0)
+    setTimeout(function () {
+      closest(e.target, "form-tourist__form").parentNode.removeChild(
+        closest(e.target, "form-tourist__form")
+      ) //.remove()
+    }, 500)
+  }
+
+  function name_tour_f() {
+    /*-----------------------------select[name="name_tour"]-----------------------------*/
+    ;[].forEach.call(
+      document.querySelectorAll('select[name="name_tour"]'),
+      function (name_tour) {
+        name_tour.addEventListener("change", name_tour_function)
+      }
+    )
+  }
+  name_tour_f()
+  function name_tour_function(e) {
+    ;[].forEach.call(
+      closest(e.target, "form-tourist__form-content").querySelectorAll(
+        ".form-tourist__block-date"
+      ),
+      function (block_date) {
+        if (
+          block_date.getAttribute("data-tour-date") ==
+          e.target.options[e.target.selectedIndex].getAttribute(
+            "data-tour-name"
+          )
+        ) {
+          if (
+            closest(e.target, "form-tourist__form-content").querySelector(
+              ".form-tourist__block-date_active"
+            )
+          )
+            closest(e.target, "form-tourist__form-content")
+              .querySelector(".form-tourist__block-date_active")
+              .classList.remove("form-tourist__block-date_active")
+          block_date.classList.add("form-tourist__block-date_active")
+        }
+      }
+    )
+  }
+
+  /*-----------------------------btn-scroll-----------------------------*/
+  ;[].forEach.call(document.getElementsByClassName("btn-scroll"), function (
+    scroll
+  ) {
+    scroll.addEventListener("click", function (e) {
+      e.preventDefault()
+
+      var attr = this.getAttribute("href").slice(
+          1,
+          this.getAttribute("href").length
+        ),
+        bodyOffsets = document.body.getBoundingClientRect().top,
+        offsetTop =
+          document.getElementById(attr).getBoundingClientRect().top +
+          -bodyOffsets -
+          menu.scrollHeight,
+        pageYOffset_old = 0,
+        i = 1, //speed
+        bottom_scroll = offsetTop > window.pageYOffset ? true : false
+      function scroll() {
+        window.scrollBy(0, i)
+
+        if (
+          offsetTop > window.pageYOffset &&
+          window.pageYOffset != pageYOffset_old &&
+          bottom_scroll
+        ) {
+          i += 5
+        } else if (
+          window.pageYOffset > offsetTop &&
+          window.pageYOffset != offsetTop &&
+          !bottom_scroll
+        ) {
+          i -= 5
+        } else {
+          window.scrollBy(0, -(window.pageYOffset - offsetTop))
+          return false
+        }
+        requestAnimationFrame(scroll)
+        pageYOffset_old = window.pageYOffset
+      }
+      scroll()
+    })
+  })
+
+  /*-----------------------------repeat-sender-----------------------------*/
+  var blog_btn = document.getElementsByClassName("intro-blog__btn-show")[0]
+  if (blog_btn) {
+    blog_btn.addEventListener("click", function (e) {
+      e.preventDefault()
+
+      var hidden = document.getElementsByClassName(
+        "intro-blog__wrpapper_hidden"
+      )
+      for (var i = 0; i < 3; i++) {
+        if (hidden[i]) hidden[i].classList.add("intro-blog__wrpapper_active")
+      }
+
+      ;[].forEach.call(
+        document.querySelectorAll(
+          ".intro-blog__wrpapper_active img[data-lazy-blog],.intro-blog__wrpapper_active source[data-lazy-blog]"
+        ),
+        function (img) {
+          lazy_src(img, "data-lazy-blog")
+
+          img.onload = function () {
+            closest(img, "intro-blog__wrpapper_active").style.height =
+              closest(img, "intro-blog__wrpapper_active").scrollHeight + "px"
+            closest(img, "intro-blog__wrpapper_active").classList.remove(
+              "intro-blog__wrpapper_hidden"
+            )
+            closest(img, "intro-blog__wrpapper_active").classList.remove(
+              "intro-blog__wrpapper_active"
+            )
+
+            if (!hidden.length) {
+              setTimeout(function () {
+                var wrap_btn = document.getElementsByClassName(
+                  "intro-blog__btn-block"
+                )[0]
+                wrap_btn.style.height = wrap_btn.scrollHeight + "px"
+                wrap_btn.style.height = 0
+              }, 400)
+            }
+          }
+        }
+      )
+    })
+  }
+
+  /*-----------------------------detailed-tour-----------------------------*/
+  function detailed_tour() {
+    if (window.innerWidth > 992) {
+      ;[].forEach.call(
+        document.querySelectorAll(".detailed-tour__lightgallery"),
+        function (lightgallery) {
+          if (
+            closest(lightgallery, "js_slide").querySelector(
+              ".detailed-tour__img-wrapper"
+            )
+          )
+            closest(lightgallery, "js_slide")
+              .querySelector(".detailed-tour__img-wrapper")
+              .appendChild(lightgallery)
+        }
+      )
+    } else {
+      ;[].forEach.call(
+        document.querySelectorAll(".detailed-tour__lightgallery"),
+        function (lightgallery) {
+          if (
+            closest(lightgallery, "js_slide").querySelector(
+              ".detailed-tour__content-info"
+            )
+          )
+            closest(lightgallery, "js_slide")
+              .querySelector(".detailed-tour__content-info")
+              .parentNode.insertBefore(
+                lightgallery,
+                closest(lightgallery, "js_slide").querySelector(
+                  ".detailed-tour__content-info"
+                )
+              )
+        }
+      )
+    }
+  }
+  detailed_tour()
+
+  /*-----------------------------guide-----------------------------*/
+  function guide() {
+    if (window.innerWidth > 992) {
+      ;[].forEach.call(document.querySelectorAll(".guide__media"), function (
+        lightgallery
+      ) {
+        closest(lightgallery, "js_slide")
+          .querySelector(".guide__media-wrapper")
+          .appendChild(lightgallery)
+      })
+    } else {
+      ;[].forEach.call(document.querySelectorAll(".guide__media"), function (
+        media
+      ) {
+        closest(media, "js_slide")
+          .querySelector(".guide__list")
+          .parentNode.insertBefore(
+            media,
+            closest(media, "js_slide").querySelector(".guide__list").nextSibling
+          )
+      })
+    }
+  }
+  guide()
+
+  /*-----------------------------js_slides__content-----------------------------*/
+  function big_dots_resize(content) {
+    if (
+      content.querySelector(".js_slides__content") &&
+      window.innerWidth < 992
+    ) {
+      ;[].forEach.call(content.querySelectorAll(".slider"), function (
+        big_dots
+      ) {
+        if (big_dots.querySelector(".js_slide.active .js_slides__content"))
+          big_dots.querySelector(".js_frame").style.height =
+            big_dots.querySelector(".js_slide.active .js_slides__content")
+              .scrollHeight + "px"
+      })
+    } else {
+      ;[].forEach.call(content.querySelectorAll(".slider"), function (
+        big_dots
+      ) {
+        big_dots.querySelector(".js_frame").removeAttribute("style")
+      })
+    }
+  }
+
+  ;[].forEach.call(
+    document.querySelectorAll(".btn-slider,.js_dots li"),
+    function (slider_big) {
+      console.trace(slider_big)
+      slider_big.addEventListener("click", function (e) {
+        e.preventDefault()
+        if (closest(slider_big, "slider")) {
+          if (window.innerWidth < 992)
+            closest(slider_big, "slider").querySelector(
+              ".js_frame"
+            ).style.height =
+              closest(slider_big, "slider").querySelector(
+                ".js_slide.active .js_slides__content"
+              ).scrollHeight + "px"
+          ;[].forEach.call(
+            closest(slider_big, "slider").querySelectorAll(
+              "img[data-lazy_slider],source[data-lazy_slider]"
+            ),
+            function (img) {
+              lazy_src(img, "data-lazy_slider")
+              img.removeAttribute("data-lazy_slider")
+              img.onload = function () {
+                if (closest(img, "active-load"))
+                  closest(img, "active-load").classList.remove("active-load")
+                if (window.innerWidth < 992) {
+                  closest(img, "js_frame").style.height =
+                    closest(slider_big, "slider").querySelector(
+                      ".js_slide.active .js_slides__content"
+                    ).scrollHeight + "px"
+                }
+              }
+            }
+          )
+        }
+
+        if (
+          closest(slider_big, "detailed-tour__js_dots") ||
+          slider_big.classList.contains("detailed-tour__btn-slider")
+        ) {
+          var item = closest(slider_big, "slider").querySelector(
+              ".js_slide.active"
+            ), // index()
+            nodes_item = Array.prototype.slice.call(
+              closest(slider_big, "slider").getElementsByClassName("js_slide")
+            ),
+            title_section = document.getElementsByClassName(
+              "detailed-tour__title-section"
+            )[0]
+
+          if (parseInt(nodes_item.indexOf(item)) == 0) {
+            title_section.classList.add("detailed-tour__title-section_active")
+            setTimeout(function () {
+              title_section.innerHTML =
+                'Почему <span class="detailed-tour__text-color"> на алтае безопасно</span>'
+              title_section.classList.remove(
+                "detailed-tour__title-section_active"
+              )
+            }, 400)
+            title_section.classList.add(
+              "detailed-tour__title-section_active-etc"
+            )
+          } else {
+            if (
+              title_section.classList.contains(
+                "detailed-tour__title-section_active-etc"
+              )
+            ) {
+              title_section.classList.add("detailed-tour__title-section_active")
+              setTimeout(function () {
+                title_section.innerHTML = "Ближайшие заезды"
+                title_section.classList.remove(
+                  "detailed-tour__title-section_active"
+                )
+              }, 400)
+              title_section.classList.remove(
+                "detailed-tour__title-section_active-etc"
+              )
+            }
+          }
+        }
+      })
+    }
+  )
+
+  window.onresize = function () {
+    if (document.querySelector(".mobile-dots")) {
+      if (window.innerWidth > 576) {
+        document.querySelector(".js_slides_mobile").removeAttribute("style")
+      }
+    }
+
+    setTimeout(function () {
+      big_dots_resize(document)
+    }, 450)
+
+    guide()
+
+    detailed_tour()
+
+    fixed_menu()
+
+    position_form = sticky__wrap
+      ? container.offsetWidth -
+        sticky__wrap.offsetWidth +
+        container.offsetLeft -
+        parseInt(getComputedStyle(container).paddingRight)
+      : ""
+
+    if (window.innerWidth > 992) widget_resize = true
+    scroll_sticky((scroll_top = window.pageYOffset))
+
+    if (document.getElementsByClassName("sticky__wrap")[0])
+      information__sticky()
+  }
+
+  big_dots_resize(document)
+
+  /*-----------------------------map-----------------------------*/
+  if (document.getElementById("map") && window.innerWidth > 992) {
+    function mapInit() {
+      var myMap = new window.ymaps.Map("map", {
+        center: [55.0486598, 82.91123999],
+        zoom: 16,
+      })
+
+      var myPlacemark = new window.ymaps.Placemark(
+        [55.0486598, 82.91123999],
+        {},
+        {
+          iconImageHref:
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' width='60px' height='70px' fill='%23da2e2e'%3E%3Cpath d='M256 0C153.755 0 70.573 83.182 70.573 185.426c0 126.888 165.939 313.167 173.004 321.035 6.636 7.391 18.222 7.378 24.846 0 7.065-7.868 173.004-194.147 173.004-321.035C441.425 83.182 358.244 0 256 0zm0 278.719c-51.442 0-93.292-41.851-93.292-93.293S204.559 92.134 256 92.134s93.291 41.851 93.291 93.293-41.85 93.292-93.291 93.292z'/%3E%3C/svg%3E",
+          iconImageSize: [60, 70],
+        }
+      )
+      myMap.geoObjects.add(myPlacemark)
+
+      myMap.controls.add("zoomControl", { right: 10, top: 200 })
+      myMap.behaviors.disable(["scrollZoom", "dblClickZoom", "multiTouch"])
+    }
+
+    setTimeout(function () {
+      window.ymaps.ready(mapInit)
+    }, 2000)
+  }
+
+  /*-----------------------------true-altai__price-js-----------------------------*/
+  if (document.getElementsByClassName("true-altai__price-js")[0]) {
+    var date = new Date()
+    date.setDate(date.getDate() + 7)
+    date = date.toUTCString()
+
+    //Cookie
+    function getCookie(name) {
+      var matches = document.cookie.match(
+        new RegExp(
+          "(?:^|; )" +
+            name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, "\\$1") +
+            "=([^;]*)"
+        )
+      )
+      return matches ? decodeURIComponent(matches[1]) : undefined
+    }
+
+    if (getCookie("timer")) {
+      ;[].forEach.call(
+        document.querySelectorAll(".true-altai__price-js"),
+        function (price_fixed) {
+          price_fixed.innerHTML = getCookie("timer")
+        }
+      )
+    }
+
+    //localStorage
+    /*var localValue = localStorage.getItem('timer');
+if (localValue != null) {
+[].forEach.call(document.querySelectorAll('.true-altai__price-js'), function(price_fixed) {
+price_fixed.innerHTML=localValue
+})
+}*/
+
+    setInterval(function () {
+      ;[].forEach.call(
+        document.querySelectorAll(".true-altai__price-js"),
+        function (price_fixed) {
+          var num = parseInt(price_fixed.innerHTML.replace(/\s/g, "")) + 1
+          price_fixed.innerHTML =
+            num.toString().replace(/(\d{1,3})(?=((\d{3})*([^\d]|$)))/g, " $1") +
+            " ₽"
+        }
+      )
+
+      document.cookie =
+        "timer=" +
+        document.getElementsByClassName("true-altai__price-js")[0].innerHTML +
+        "; path=/; expires=" +
+        date
+
+      //localStorage.setItem('timer', document.getElementsByClassName('true-altai__price-js')[0].innerHTML);
+    }, 1000)
+  }
+
+  /*-----------------------------tour-individual-form-tourist__block-----------------------------*/
+  if (
+    document.getElementsByClassName("tour-individual-form-tourist__block")[0] &&
+    window.innerWidth > 768
+  ) {
+    for (
+      var i = 0;
+      i <
+      document.getElementsByClassName("tour-individual-form-tourist__block")
+        .length;
+      i++
+    ) {
+      var block_wrap = 0
+      ;[].forEach.call(
+        document
+          .getElementsByClassName("tour-individual-form-tourist__block")
+          [i].querySelectorAll(".tour-individual-form-tourist__block-title"),
+        function (block) {
+          if (block.offsetHeight > block_wrap) block_wrap = block.offsetHeight
+        }
+      )
+      ;[].forEach.call(
+        document
+          .getElementsByClassName("tour-individual-form-tourist__block")
+          [i].querySelectorAll(".tour-individual-form-tourist__block-title"),
+        function (block_height) {
+          block_height.style.height = block_wrap + "px"
+        }
+      )
+      block_wrap = 0
+    }
+  }
+
+  /*-----------------------------intro-info-----------------------------*/
+  if (
+    document.getElementsByClassName("intro-info")[0] &&
+    window.innerWidth > 1200
+  ) {
+    document
+      .getElementsByClassName("intro-info")[0]
+      .addEventListener("mousemove", function (e) {
+        this.style.setProperty("--xT", (e.clientX * -0.3) / 4 + "px")
+        this.style.setProperty("--yT", (e.clientY * -0.4) / 40 + "px")
+      })
+  }
+
+  /*-----------------------------select-active-----------------------------*/
+  if (document.getElementsByClassName("select-active")[0]) {
+    function select_active() {
+      ;[].forEach.call(document.querySelectorAll(".select-active"), function (
+        select
+      ) {
+        select.addEventListener("change", select_active_func)
+      })
+    }
+    select_active()
+    function select_active_func(e) {
+      e.preventDefault()
+      e.target.classList.remove("select-active")
+    }
+  }
+
+  /*-----------------------------xcalend-----------------------------*/
+  ;[].forEach.call(document.querySelectorAll(".xCal"), function (xCal_click) {
+    xCal_click.addEventListener("click", function (e) {
+      xCal(xCal_click, {
+        fn: function () {
+          xCal_click.focus()
+        },
+      })
+    })
+  })
+
+  /*-----------------------------xcalend-----------------------------*/
+  ;[].forEach.call(document.querySelectorAll(".modal-tour input"), function (
+    xCal_input
+  ) {
+    xCal_input.addEventListener("click", function (e) {
+      if (
+        !xCal_input.classList.contains("xCal") &&
+        document.getElementsByClassName("xcalend")[0]
+      ) {
+        document.getElementsByClassName("xcalend")[0].removeAttribute("style")
+      }
+    })
+  })
+
+  /*support webp*/
+  var elem = document.createElement("canvas")
+  if (
+    !!(elem.getContext && elem.getContext("2d")) &&
+    elem.toDataURL("image/webp").indexOf("data:image/webp") != 0
+  ) {
+    ;[].forEach.call(document.querySelectorAll(".webp-bg"), function (webp) {
+      webp.classList.remove("webp-bg")
+    })
+    ;[].forEach.call(document.querySelectorAll("[data-href-webp]"), function (
+      href
+    ) {
+      if (href.getAttribute("href")) {
+        href.setAttribute("href", href.getAttribute("data-href-webp"))
+      } else if (href.getAttribute("data-src")) {
+        href.setAttribute("data-src", href.getAttribute("data-href-webp"))
+      }
+      href.removeAttribute("data-href-webp")
+    })
+  }
+
+  /*-----------------------------function lazy-load-----------------------------*/
+  function lazy_src(img, data_lazy) {
+    if (img.getAttribute("src"))
+      img.setAttribute("src", img.getAttribute(data_lazy))
+    if (img.getAttribute("srcset"))
+      img.setAttribute("srcset", img.getAttribute(data_lazy))
+    img.removeAttribute("data-lazy")
+    img.onload = function () {
+      if (closest(img, "active-load"))
+        closest(img, "active-load").classList.remove("active-load")
+    }
+
+    if (closest(img, "js_slides__content")) {
+      setTimeout(function () {
+        big_dots_resize(closest(img, "section"))
+      }, 450)
+    }
+  }
+
+  /*-----------------------------main scripts-----------------------------*/
+
+  //closest
+  function closest(el, cls) {
+    while (
+      (el = el.parentElement) &&
+      !el.classList.contains(cls) &&
+      !(
+        el.matches ||
+        el.matchesSelector ||
+        el.webkitMatchesSelector ||
+        el.mozMatchesSelector ||
+        el.msMatchesSelector
+      ).call(el, cls)
+    );
+    return el
+  }
+
+  function getFieldValue(form, fieldName) {
+    var field = form[fieldName]
+    if (!field) return null
+
+    return field.value
+  }
+
+  var fieldNames = [
+    'name',
+    'email',
+    'start_tour',
+    'end_tour',
+    'phone',
+    'city_main',
+    'message',
+    'name_tour',
+    'travel_date',
+    'birthday_tourist',
+    'document_info',
+    'series',
+    'date_issue',
+    'issued_by',
+    'department_code',
+    'registration_address_tourist',
+    'peculiar_properties',
+    'duration_days',
+    'subject',
+    'number_persons',
+    'budget',
+    'call',
+  ]
+  function listenSubmitionForm(mailSubject) {
+    var forms = Array.from(document.getElementsByTagName('form') || []);
+    if (!forms.length) return null
+
+    forms.forEach((form) => {
+      form.addEventListener('submit', function(event) {
+        var payload = {
+          mailSubject,
+        }
+        fieldNames.forEach(function(fieldName) {
+          var fieldValue = getFieldValue(form, fieldName)
+          if (!fieldValue) return null
+  
+          payload[fieldName] = fieldValue
+        });
+  
+        var button = form.querySelector('[type=submit]')
+        button.disabled = true
+        event.preventDefault();
+        fetch('https://hook.integromat.com/vi4tfyl7e493u3n3aax2e951gbes48fz', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        }).then(function() {
+          var successBlock = form.querySelector(".form__success")
+          var formContent = form.querySelector('.form__content')
+          formContent.style.height = 0
+          successBlock.style.height = successBlock.scrollHeight + "px"
+          button.disabled = false
+        })
+      })
+    })
+  }
+  listenSubmitionForm()
+
+  function defineActivePage(){
+    var locationHref = window.location.href
+    var links = document.getElementsByClassName('menu__link');
+    var informationLinkNames = ['documenty', 'faq', 'memo', 'reviews', 'guide']
+    if (informationLinkNames.some(function(linkName) { return locationHref.includes(linkName) })) {
+      var informationLink = document.querySelector('[href*="info.html"]')
+      if (informationLink) return informationLink.classList.add('menu__link_active')
+    }
+    
+    Array.from(links).forEach(function(link) {
+      var href = link.href
+      if (!href) return null
+
+      if (locationHref.includes(href.replace('.html', '')) || (href.includes('index.html') && window.location.pathname === '/')) {
+        link.classList.add('menu__link_active')
+      } else {
+        link.classList.remove('menu__link_active')
+      }
+    })
+  }
+  defineActivePage();
+})
